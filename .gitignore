@@ -140,4 +140,5 @@ cython_debug/
 # Do not include this for this project
 datasets/
 checkpoints/
+/.idea/
 *.h5
