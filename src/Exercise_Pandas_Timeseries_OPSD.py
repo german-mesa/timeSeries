@@ -12,7 +12,6 @@
 #   Wind+Solar — Sum of wind and solar power production in GWh
 #
 
-import numpy as np
 import pandas as pd
 
 import matplotlib.pyplot as plt
@@ -217,6 +216,109 @@ def time_series_resampling_renewables_consumption_year(data):
     plt.show()
 
 
+def time_series_rolling_windows(data):
+    # Unlike downsampling, where the time bins do not overlap and the output is at a lower frequency than the input,
+    # rolling windows overlap and “roll” along at the same frequency as the data, so the transformed time series is
+    # at the same frequency as the original time series
+
+    # Specify the data columns we want to include (i.e. exclude Year, Month, Weekday Name)
+    data_columns = ['Consumption', 'Wind', 'Solar', 'Wind+Solar']
+
+    # Resample to weekly frequency, aggregating with mean
+    data_weekly_mean = data[data_columns].resample('W').mean()
+
+    # Compute the centered 7-day rolling mean - center=True argument to label each window at its midpoint
+    data_rolling_7d = data[data_columns].rolling(7, center=True).mean()
+
+    # Plot daily and weekly resampled time series together
+    fig, ax = plt.subplots()
+
+    ax.plot(data.loc['2017-01':'2017-06', 'Solar'],
+            marker='.',
+            linestyle='-',
+            linewidth=0.5,
+            label='Daily')
+
+    ax.plot(data_weekly_mean.loc['2017-01':'2017-06', 'Solar'],
+            marker='o',
+            markersize=8,
+            linestyle='-',
+            label='Weekly Mean Resample')
+
+    ax.plot(data_rolling_7d.loc['2017-01':'2017-06', 'Solar'],
+            marker='.',
+            linestyle='-',
+            label='7-d Rolling Mean')
+
+    ax.set_ylabel('Solar Production (GWh)')
+    ax.legend()
+
+    plt.show()
+
+
+def time_series_trends_consumption(data):
+    # Specify the data columns we want to include (i.e. exclude Year, Month, Weekday Name)
+    data_columns = ['Consumption', 'Wind', 'Solar', 'Wind+Solar']
+
+    # Compute the centered 7-day rolling mean - center=True argument to label each window at its midpoint
+    data_rolling_7d = data[data_columns].rolling(7, center=True).mean()
+
+    # The min_periods=360 argument accounts for a few isolated missing days in the
+    # wind and solar production time series
+    data_trend_365d = data[data_columns].rolling(window=365, center=True, min_periods=360).mean()
+
+    # Plot daily, 7-day rolling mean, and 365-day rolling mean time series
+    fig, ax = plt.subplots()
+
+    ax.plot(data['Consumption'],
+            marker='.',
+            markersize=2,
+            color='0.6',
+            linestyle='None',
+            label='Daily')
+
+    ax.plot(data_rolling_7d.loc['2017-01':'2017-06', 'Solar'],
+            marker='.',
+            linestyle='-',
+            label='7-d Rolling Mean')
+
+    ax.plot(data_trend_365d['Consumption'],
+            color='0.2',
+            linewidth=3,
+            label='Trend (365-d Rolling Mean)')
+
+    # Set x-ticks to yearly interval and add legend and labels
+    ax.xaxis.set_major_locator(mdates.YearLocator())
+    ax.legend()
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Consumption (GWh)')
+    ax.set_title('Trends in Electricity Consumption')
+
+    plt.show()
+
+
+def time_series_trends_production(data):
+    # Specify the data columns we want to include (i.e. exclude Year, Month, Weekday Name)
+    data_columns = ['Consumption', 'Wind', 'Solar', 'Wind+Solar']
+
+    # The min_periods=360 argument accounts for a few isolated missing days in the
+    # wind and solar production time series
+    data_trend_365d = data[data_columns].rolling(window=365, center=True, min_periods=360).mean()
+
+    # Plot 365-day rolling mean time series of wind and solar power
+    fig, ax = plt.subplots()
+    for nm in ['Wind', 'Solar', 'Wind+Solar']:
+        ax.plot(data_trend_365d[nm], label=nm)
+        # Set x-ticks to yearly interval, adjust y-axis limits, add legend and labels
+        ax.xaxis.set_major_locator(mdates.YearLocator())
+        ax.set_ylim(0, 400)
+        ax.legend()
+        ax.set_ylabel('Production (GWh)')
+        ax.set_title('Trends in Electricity Production (365-d Rolling Means)');
+
+    plt.show()
+
+
 if __name__ == '__main__':
     # Read dataset from Open Power System data for Germany
     df = pd.read_csv("https://github.com/jenfly/opsd/raw/master/opsd_germany_daily.csv", index_col=0, parse_dates=True)
@@ -247,3 +349,12 @@ if __name__ == '__main__':
 
     # Plotting Wind + Solar Share of Annual Electricity Consumption per year
     time_series_resampling_renewables_consumption_year(df)
+
+    # Plotting average and rolling mean Electricity Consumption and renewables per week
+    time_series_rolling_windows(df)
+
+    # Plotting Trends in Electricity Consumption
+    time_series_trends_consumption(df)
+
+    # Plotting Trends in Electricity Production
+    time_series_trends_production(df)
