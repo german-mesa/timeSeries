@@ -1,52 +1,8 @@
-wget --no-check-certificate \
-    https://storage.googleapis.com/laurencemoroney-blog.appspot.com/horse-or-human.zip \
-    -O ./course1/week4/datasets/images/horses_or_humans/horse-or-human.zip
 
 wget --no-check-certificate \
-    https://storage.googleapis.com/laurencemoroney-blog.appspot.com/horse-or-human.zip \
-    -O ./course2/week3/datasets/images/horses_or_humans/horse-or-human.zip
+    https://github.com/jenfly/opsd/raw/master/opsd_germany_daily.csv \
+    -O ./datasets/opsd_germany_daily.csv
 
-wget --no-check-certificate \
-    https://storage.googleapis.com/laurencemoroney-blog.appspot.com/validation-horse-or-human.zip \
-    -O ./course2/week3/datasets/images/horses_or_humans/validation-horse-or-human.zip
-
-
-
-wget --no-check-certificate \
-  https://storage.googleapis.com/mledu-datasets/cats_and_dogs_filtered.zip \
-  -O ./course2/week1/datasets/images/cats_and_dogs/cats_and_dogs_filtered.zip
-
-
-wget --no-check-certificate \
-    https://storage.googleapis.com/mledu-datasets/inception_v3_weights_tf_dim_ordering_tf_kernels_notop.h5 \
-    -O ./course2/week3/transfer/inception_v3_weights_tf_dim_ordering_tf_kernels_notop.h5
-
-
-Course 3
---------
-wget --no-check-certificate \
-    https://storage.googleapis.com/laurencemoroney-blog.appspot.com/sarcasm.json \
-    -O ./datasets/sarcasm.json
-
-wget --no-check-certificate \
-    https://storage.googleapis.com/laurencemoroney-blog.appspot.com/bbc-text.csv \
-    -O ./datasets/bbc-text.csv
-
-wget --no-check-certificate \
-    https://storage.googleapis.com/laurencemoroney-blog.appspot.com/training_cleaned.csv \
-    -O ./datasets/training_cleaned.csv
-
-wget --no-check-certificate \
-    https://storage.googleapis.com/laurencemoroney-blog.appspot.com/glove.6B.100d.txt \
-    -O ./datasets/glove.6B.100d.txt
-
-wget --no-check-certificate \
-    https://storage.googleapis.com/laurencemoroney-blog.appspot.com/irish-lyrics-eof.txt \
-    -O ./datasets/irish-lyrics-eof.txt
-
-
-Course 4
---------
 wget --no-check-certificate \
     https://raw.githubusercontent.com/jbrownlee/Datasets/master/daily-min-temperatures.csv \
     -O /tmp/daily-min-temperatures.csv
