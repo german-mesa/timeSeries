@@ -1,7 +1,17 @@
 #
 # Time series using Pandas
+#
 # Example as described in https://www.dataquest.io/blog/tutorial-time-series-analysis-with-pandas/
 #
+# Electricity production and consumption are reported as daily totals in gigawatt-hours (GWh).
+# The columns of the data file are:
+#   Date — The date (yyyy-mm-dd format)
+#   Consumption — Electricity consumption in GWh
+#   Wind — Wind power production in GWh
+#   Solar — Solar power production in GWh
+#   Wind+Solar — Sum of wind and solar power production in GWh
+#
+
 import numpy as np
 import pandas as pd
 
@@ -14,8 +24,11 @@ def dataset_review(data):
     print(data.shape)
     print(data.dtypes)
 
+    # data = data.set_index('Date')  # Creating DataFrame’s index as DatetimeIndex
+
     data['Year'] = data.index.year  # Adding year based on index
     data['Month'] = data.index.month  # Adding month based on index
+    data['Weekday Name'] = data.index.day_name()
 
     print(data.head(3))
     print(data.tail(3))
@@ -29,6 +42,18 @@ def time_based_indexing(data):
 
 
 def time_series_visualization(data):
+    # Patterns found in visualization:
+    # - Electricity consumption is highest in winter, presumably due to electric heating and increased lighting usage,
+    #   and lowest in summer.
+    # - Electricity consumption appears to split into two clusters — one with oscillations centered roughly
+    #   around 1400 GWh, and another with fewer and more scattered data points, centered roughly around 1150 GWh.
+    #   We might guess that these clusters correspond with weekdays and weekends, and we will investigate this
+    #   further shortly.
+    # - Solar power production is highest in summer, when sunlight is most abundant, and lowest in winter.
+    # - Wind power production is highest in winter, presumably due to stronger winds and more frequent storms,
+    #   and lowest in summer.
+    # - There appears to be a strong increasing trend in wind power production over the years.
+    #
     sns.set(rc={'figure.figsize': (11, 4)})
 
     # Full time series of Germany’s daily electricity consumption
@@ -54,6 +79,9 @@ def time_series_visualization(data):
 
 
 def time_series_customizing(data):
+    # To better visualize the weekly seasonality in electricity consumption in the plot above,
+    # it would be nice to have vertical gridlines on a weekly time scale
+
     # Plots created directly in matplotlib
     fig, ax = plt.subplots()
 
@@ -71,6 +99,15 @@ def time_series_customizing(data):
 
 
 def time_series_seasonality(data):
+    # Patterns found in visualization:
+    # - Although electricity consumption is generally higher in winter and lower in summer, the median and lower
+    #   two quartiles are lower in December and January compared to November and February, likely due to businesses
+    #   being closed over the holidays. We saw this in the time series for the year 2017, and the box plot confirms
+    #   that this is consistent pattern throughout the years.
+    # - While solar and wind power production both exhibit a yearly seasonality, the wind power distributions have
+    #   many more outliers, reflecting the effects of occasional extreme wind speeds associated with storms and
+    #   other transient weather conditions.
+
     # Plots created directly in matplotlib
     fig, axes = plt.subplots(3, 1, figsize=(11, 10), sharex=True)
 
@@ -83,6 +120,99 @@ def time_series_seasonality(data):
     # Remove the automatic x-axis label from all but the bottom subplot
     if ax != axes[-1]:
         ax.set_xlabel('')
+
+    plt.show()
+
+
+def time_series_weekly_seasonality(data):
+    # As expected, electricity consumption is significantly higher on weekdays than on weekends.
+    # The low outliers on weekdays are presumably during holidays.
+
+    sns.boxplot(data=data, x='Weekday Name', y='Consumption')
+
+    plt.show()
+
+
+def time_series_resampling_weekly(data):
+    # Specify the data columns we want to include (i.e. exclude Year, Month, Weekday Name)
+    data_columns = ['Consumption', 'Wind', 'Solar', 'Wind+Solar']
+
+    # Resample to weekly frequency, aggregating with mean
+    data_weekly_mean = data[data_columns].resample('W').mean()
+
+    # Plot daily and weekly resampled time series together
+    fig, ax = plt.subplots()
+
+    ax.plot(data.loc['2017-01':'2017-06', 'Solar'],
+            marker='.',
+            linestyle='-',
+            linewidth=0.5,
+            label='Daily')
+
+    ax.plot(data_weekly_mean.loc['2017-01':'2017-06', 'Solar'],
+            marker='o',
+            markersize=8,
+            linestyle='-',
+            label='Weekly Mean Resample')
+
+    ax.set_ylabel('Solar Production (GWh)')
+    ax.legend()
+
+    plt.show()
+
+
+def time_series_resampling_month(data):
+    # At this monthly time scale, we can clearly see the yearly seasonality in each time series,
+    # and it is also evident that electricity consumption has been fairly stable over time,
+    # while wind power production has been growing steadily, with wind + solar power comprising an increasing
+    # share of the electricity consumed
+
+    # Specify the data columns we want to include (i.e. exclude Year, Month, Weekday Name)
+    data_columns = ['Consumption', 'Wind', 'Solar', 'Wind+Solar']
+
+    # Compute the monthly sums, setting the value to NaN for any month which has
+    # fewer than 28 days of data
+    data_monthly = data[data_columns].resample('M').sum(min_count=28)
+
+    fig, ax = plt.subplots()
+    ax.plot(data_monthly['Consumption'], color='black', label='Consumption')
+    data_monthly[['Wind', 'Solar']].plot.area(ax=ax, linewidth=0)
+
+    ax.xaxis.set_major_locator(mdates.YearLocator())
+    ax.legend()
+    ax.set_ylabel('Monthly Total (GWh)')
+
+    plt.show()
+
+
+def time_series_resampling_renewables_consumption_year(data):
+    # Wind + solar production as a share of annual electricity consumption has been increasing
+    # from about 15% in 2012 to about 27% in 2017
+
+    # Specify the data columns we want to include (i.e. exclude Year, Month, Weekday Name)
+    data_columns = ['Consumption', 'Wind', 'Solar', 'Wind+Solar']
+
+    # Compute the annual sums, setting the value to NaN for any year which has
+    # fewer than 360 days of data
+    data_annual = data[data_columns].resample('A').sum(min_count=360)
+
+    # The default index of the resampled DataFrame is the last day of each year,
+    # ('2006-12-31', '2007-12-31', etc.) so to make life easier, set the index
+    # to the year component
+    data_annual = data_annual.set_index(data_annual.index.year)
+    data_annual.index.name = 'Year'
+
+    # Compute the ratio of Wind+Solar to Consumption
+    data_annual['Wind+Solar/Consumption'] = data_annual['Wind+Solar'] / data_annual['Consumption']
+    data_annual.tail(3)
+
+    # Plot from 2012 onwards, because there is no solar production data in earlier years
+    ax = data_annual.loc[2012:, 'Wind+Solar/Consumption'].plot.bar(color='C0')
+    ax.set_ylabel('Fraction')
+    ax.set_ylim(0, 0.3)
+    ax.set_title('Wind + Solar Share of Annual Electricity Consumption')
+
+    plt.xticks(rotation=0)
 
     plt.show()
 
@@ -105,3 +235,15 @@ if __name__ == '__main__':
 
     # Plotting seasonality
     time_series_seasonality(df)
+
+    # Plotting weekly seasonality
+    time_series_weekly_seasonality(df)
+
+    # Plotting average Electricity Consumption and renewables per week
+    time_series_resampling_weekly(df)
+
+    # Plotting Electricity Consumption and renewables per month
+    time_series_resampling_month(df)
+
+    # Plotting Wind + Solar Share of Annual Electricity Consumption per year
+    time_series_resampling_renewables_consumption_year(df)
