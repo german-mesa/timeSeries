@@ -5,4 +5,4 @@ wget --no-check-certificate \
 
 wget --no-check-certificate \
     https://raw.githubusercontent.com/jbrownlee/Datasets/master/daily-min-temperatures.csv \
-    -O /tmp/daily-min-temperatures.csv
+    -O ./datasets/daily-min-temperatures.csv
