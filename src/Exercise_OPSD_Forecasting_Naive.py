@@ -89,10 +89,12 @@ def time_series_visualization(data):
 
 
 def mean_squared_error(value, forecast):
+    # MSE measures the average magnitude of the error
     return keras.metrics.mean_squared_error(value, forecast).numpy()
 
 
 def mean_absolute_error(value, forecast):
+    # MAE measures the average magnitude of the errors in a set of predictions
     return keras.metrics.mean_absolute_error(value, forecast).numpy()
 
 
@@ -101,7 +103,8 @@ def moving_average_consumption(data, window):
     # Moving average smooth out the data, allowing us to properly visualize the trend direction.
     # The first rows of the returned series contain null values since rolling needs a minimum of M values  - value
     # specified in the window argument) to return the mean. You can change this behavior by modifying the argument
-    # min_periods
+    # min_periods.The disadvantage of this method is that it could not smoothly decay old data and sometimes when
+    # an outlier is added or discarded, the prediction will change a lot.
     data['SMA_10'] = data['Consumption'].rolling(window, min_periods=1).mean()
     print('MSE for SMA_10 {}'.format(mean_squared_error(data['Consumption'], data['SMA_10'])))
     print('MAE for SMA_10 {}'.format(mean_absolute_error(data['Consumption'], data['SMA_10'])))
