@@ -60,7 +60,10 @@ def time_series_visualization(data):
     plt.show()
 
     # Subplots by generation type
-    axes = data[['Consumption', 'Solar', 'Wind']].plot(marker='.', alpha=0.5, linestyle='None', figsize=(11, 9),
+    axes = data[['Consumption', 'Solar', 'Wind']].plot(marker='.',
+                                                       alpha=0.5,
+                                                       linestyle='None',
+                                                       figsize=(11, 9),
                                                        subplots=True)
     for ax in axes:
         ax.set_ylabel('Daily Totals (GWh)')

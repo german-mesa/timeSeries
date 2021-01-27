@@ -13,14 +13,12 @@
 #   Wind+Solar — Sum of wind and solar power production in GWh
 #
 import os
-import pandas as pd
-import numpy as np
-
-from tensorflow import keras
 
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
+import pandas as pd
 import seaborn as sns
+
+from tensorflow import keras
 
 
 def dataset_review(data):
