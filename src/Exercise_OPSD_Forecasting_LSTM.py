@@ -77,6 +77,21 @@ def time_series_visualization(data):
     plt.show()
 
 
+def history_visualization(history):
+    mae = history.history['mae']
+    loss = history.history['loss']
+    epochs = range(len(loss))  # Get number of epochs
+
+    plt.plot(epochs, mae, 'r')
+    plt.plot(epochs, loss, 'b')
+    plt.title('MAE and Loss')
+    plt.xlabel("Epochs")
+    plt.ylabel("Accuracy")
+    plt.legend(["MAE", "Loss"])
+
+    plt.show()
+
+
 def windowed_dataset(data, window_size, batch_size, shuffle_buffer):
     data = tf.expand_dims(data, axis=-1)
     data = np.asarray(data).astype('float32')
@@ -91,13 +106,13 @@ def windowed_dataset(data, window_size, batch_size, shuffle_buffer):
     return ds
 
 
-def forecasting_production(data):
+def model_built_forecasting_production(data):
+    checkpoint_path = os.path.join(os.getcwd(), 'checkpoints', 'OPSD-{epoch:04d}.ckpt')
+
     tf.keras.backend.clear_session()
     tf.random.set_seed(RANDOM_SEED)
 
     data_train = data.loc['2006': '2017']
-    data_validation = data.loc['2018': '2020']
-
     train_set = windowed_dataset(data_train['Consumption'], WINDOW_SIZE, BATCH_SIZE, SHUFFLE_BUFFER_SIZE)
 
     model = tf.keras.models.Sequential(
@@ -126,13 +141,32 @@ def forecasting_production(data):
         metrics=['mae']
     )
 
+    # Load previous executions
+    # checkpoint_dir = os.path.dirname(checkpoint_path)
+    # model.load_weights(filepath=tf.train.latest_checkpoint(checkpoint_dir))
+
+    # Fit the model
     history = model.fit(
         train_set,
-        epochs=100,
+        epochs=50,
         callbacks=[
-            tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-8 * 10 ** (epoch / 20))
+            tf.keras.callbacks.ModelCheckpoint(
+                filepath=checkpoint_path,
+                verbose=1,
+                save_weights_only=True,
+                period=25),
+            tf.keras.callbacks.EarlyStopping(
+                monitor='mae',
+                min_delta=1,
+                patience=5
+            )
         ]
     )
+
+    # Visualize history MAE and LOSS
+    history_visualization(history)
+
+    return model
 
 
 def main():
@@ -154,7 +188,7 @@ def main():
     time_series_visualization(df)
 
     # Forecasting production
-    forecasting_production(df)
+    model = model_built_forecasting_production(df)
 
 
 if __name__ == '__main__':
