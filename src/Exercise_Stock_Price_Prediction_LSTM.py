@@ -1,3 +1,4 @@
+import os
 import math
 import pandas_datareader as web
 
@@ -34,8 +35,17 @@ def build_model_stock_price_prediction(data):
 
 
 def main():
-    # Read daily stock prices dataset from Yahoo
+    # Read dataset from Open Power System data for Germany. Uncomment the appropriate option.
+
+    # File located into local repository
+    data_file = os.path.join(os.getcwd(), 'datasets', 'msft_stock_prices.csv')
+
+    # Read daily stock prices dataset from Yahoo and save the result to local file
     df = web.DataReader('MSFT', data_source='yahoo', start='2012-01')
+    df.to_csv(data_file, index=True, header=True)
+
+    # Datetime index is created automatically when reading
+    # df = pd.read_csv(data_file, index_col=0, parse_dates=True)
 
     # Review dataset
     dataset_review(df)
