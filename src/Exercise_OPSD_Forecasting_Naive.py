@@ -96,14 +96,14 @@ def mean_absolute_error(value, forecast):
     return keras.metrics.mean_absolute_error(value, forecast).numpy()
 
 
-def moving_average_consumption(data, window):
+def moving_average_consumption(data, window_size):
     # Simple Moving Average - The simple moving average is the unweighted mean of the previous M data points.
     # Moving average smooth out the data, allowing us to properly visualize the trend direction.
     # The first rows of the returned series contain null values since rolling needs a minimum of M values  - value
     # specified in the window argument) to return the mean. You can change this behavior by modifying the argument
     # min_periods.The disadvantage of this method is that it could not smoothly decay old data and sometimes when
     # an outlier is added or discarded, the prediction will change a lot.
-    data['SMA_10'] = data['Consumption'].rolling(window, min_periods=1).mean()
+    data['SMA_10'] = data['Consumption'].rolling(window_size, min_periods=1).mean()
     print('MSE for SMA_10 {}'.format(mean_squared_error(data['Consumption'], data['SMA_10'])))
     print('MAE for SMA_10 {}'.format(mean_absolute_error(data['Consumption'], data['SMA_10'])))
 
@@ -147,7 +147,7 @@ def main():
     dataset_review(df)
 
     # Adding moving averages
-    moving_average_consumption(df, window=10)
+    moving_average_consumption(df, window_size=10)
 
     # Visualization capabilities
     time_series_visualization(df)
